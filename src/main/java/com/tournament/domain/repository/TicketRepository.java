@@ -1,14 +1,15 @@
 package com.tournament.domain.repository;
 
-import com.tournament.domain.entity.Ticket;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.tournament.domain.entity.Ticket;
 
 /**
  * Repositorio de dominio para la entidad Ticket
@@ -74,12 +75,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     @Query("SELECT COUNT(t) FROM Ticket t WHERE t.tournament.id = :tournamentId AND t.status = 'ACTIVE'")
     int countActiveByTournamentId(@Param("tournamentId") Long tournamentId);
 
-    /**
-     * Busca tickets usados por torneo
-     * @param tournamentId ID del torneo
-     * @return Lista de tickets usados
-     */
-    List<Ticket> findByTournamentIdAndStatus(Long tournamentId, Ticket.TicketStatus status);
+
 
     /**
      * Busca tickets por rango de fechas de compra

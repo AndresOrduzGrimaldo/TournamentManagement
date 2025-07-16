@@ -53,10 +53,16 @@ public class AuthService {
 
         return AuthResponse.builder()
                 .token(token)
-                .username(user.getUsername())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .role(user.getRole().name())
+                .expiresIn(jwtTokenProvider.getTimeUntilExpiration(token))
+                .user(AuthResponse.UserInfo.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .email(user.getEmail())
+                        .firstName(user.getFirstName())
+                        .lastName(user.getLastName())
+                        .role(user.getRole().name())
+                        .fullName(user.getFullName())
+                        .build())
                 .build();
     }
 
@@ -98,10 +104,16 @@ public class AuthService {
 
         return AuthResponse.builder()
                 .token(token)
-                .username(savedUser.getUsername())
-                .firstName(savedUser.getFirstName())
-                .lastName(savedUser.getLastName())
-                .role(savedUser.getRole().name())
+                .expiresIn(jwtTokenProvider.getTimeUntilExpiration(token))
+                .user(AuthResponse.UserInfo.builder()
+                        .id(savedUser.getId())
+                        .username(savedUser.getUsername())
+                        .email(savedUser.getEmail())
+                        .firstName(savedUser.getFirstName())
+                        .lastName(savedUser.getLastName())
+                        .role(savedUser.getRole().name())
+                        .fullName(savedUser.getFullName())
+                        .build())
                 .build();
     }
 
@@ -118,7 +130,7 @@ public class AuthService {
             return false;
         }
 
-        String username = jwtTokenProvider.getUsernameFromToken(token);
+        String username = jwtTokenProvider.extractUsername(token);
         Optional<User> user = userRepository.findByUsername(username);
 
         if (user.isEmpty()) {
@@ -147,7 +159,7 @@ public class AuthService {
             throw new IllegalArgumentException("Token inválido");
         }
 
-        String username = jwtTokenProvider.getUsernameFromToken(token);
+        String username = jwtTokenProvider.extractUsername(token);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
@@ -160,10 +172,47 @@ public class AuthService {
 
         return AuthResponse.builder()
                 .token(newToken)
+                .expiresIn(jwtTokenProvider.getTimeUntilExpiration(newToken))
+                .user(AuthResponse.UserInfo.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .email(user.getEmail())
+                        .firstName(user.getFirstName())
+                        .lastName(user.getLastName())
+                        .role(user.getRole().name())
+                        .fullName(user.getFullName())
+                        .build())
+                .build();
+    }
+
+    /**
+     * Obtiene información del usuario a partir del token
+     * @param token Token JWT
+     * @return Información del usuario
+     */
+    public AuthResponse.UserInfo getUserInfoFromToken(String token) {
+        log.debug("Obteniendo información del usuario desde token");
+        
+        if (!jwtTokenProvider.validateToken(token)) {
+            throw new IllegalArgumentException("Token inválido");
+        }
+
+        String username = jwtTokenProvider.extractUsername(token);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        if (!user.getIsActive()) {
+            throw new IllegalArgumentException("Usuario inactivo");
+        }
+
+        return AuthResponse.UserInfo.builder()
+                .id(user.getId())
                 .username(user.getUsername())
+                .email(user.getEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .role(user.getRole().name())
+                .fullName(user.getFullName())
                 .build();
     }
 
@@ -177,7 +226,7 @@ public class AuthService {
         // En una implementación real, aquí se invalidaría el token
         // Por ahora, solo registramos la acción
         if (jwtTokenProvider.validateToken(token)) {
-            String username = jwtTokenProvider.getUsernameFromToken(token);
+            String username = jwtTokenProvider.extractUsername(token);
             log.info("Sesión cerrada para usuario: {}", username);
         }
     }

@@ -4,6 +4,10 @@ import com.tournament.domain.entity.Tournament;
 import com.tournament.domain.entity.Category;
 import com.tournament.domain.entity.GameType;
 import com.tournament.domain.entity.User;
+import com.tournament.domain.repository.TournamentRepository;
+import com.tournament.domain.repository.CategoryRepository;
+import com.tournament.domain.repository.GameTypeRepository;
+import com.tournament.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,40 +48,45 @@ class TournamentRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // Crear datos de prueba
-        testCategory = new Category();
-        testCategory.setName("FPS");
-        testCategory.setDescription("First Person Shooter");
+        // Crear datos de prueba usando builders
+        testCategory = Category.builder()
+                .name("FPS")
+                .description("First Person Shooter")
+                .build();
         testCategory = entityManager.persistAndFlush(testCategory);
 
-        testGameType = new GameType();
-        testGameType.setName("Counter-Strike 2");
-        testGameType.setDescription("Competitive FPS game");
+        testGameType = GameType.builder()
+                .name("Counter-Strike 2")
+                .description("Competitive FPS game")
+                .build();
         testGameType = entityManager.persistAndFlush(testGameType);
 
-        testOrganizer = new User();
-        testOrganizer.setUsername("organizer1");
-        testOrganizer.setEmail("organizer@test.com");
-        testOrganizer.setPassword("password");
-        testOrganizer.setFirstName("Organizador");
-        testOrganizer.setLastName("Test");
-        testOrganizer.setRole("ORGANIZER");
+        testOrganizer = User.builder()
+                .username("organizer1")
+                .email("organizer@test.com")
+                .passwordHash("password")
+                .firstName("Organizador")
+                .lastName("Test")
+                .role(User.UserRole.SUBADMIN)
+                .isActive(true)
+                .build();
         testOrganizer = entityManager.persistAndFlush(testOrganizer);
 
-        testTournament = new Tournament();
-        testTournament.setName("Torneo de Prueba");
-        testTournament.setDescription("Torneo para pruebas unitarias");
-        testTournament.setCategory(testCategory);
-        testTournament.setGameType(testGameType);
-        testTournament.setOrganizer(testOrganizer);
-        testTournament.setIsFree(false);
-        testTournament.setPrice(new BigDecimal("50.00"));
-        testTournament.setMaxParticipants(32);
-        testTournament.setCurrentParticipants(0);
-        testTournament.setStartDate(LocalDateTime.now().plusDays(7));
-        testTournament.setEndDate(LocalDateTime.now().plusDays(14));
-        testTournament.setStatus(Tournament.TournamentStatus.PUBLISHED);
-        testTournament.setCommissionPercentage(new BigDecimal("5.00"));
+        testTournament = Tournament.builder()
+                .name("Torneo de Prueba")
+                .description("Torneo para pruebas unitarias")
+                .category(testCategory)
+                .gameType(testGameType)
+                .organizer(testOrganizer)
+                .isFree(false)
+                .price(new BigDecimal("50.00"))
+                .maxParticipants(32)
+                .currentParticipants(0)
+                .startDate(LocalDateTime.now().plusDays(7))
+                .endDate(LocalDateTime.now().plusDays(14))
+                .status(Tournament.TournamentStatus.PUBLISHED)
+                .commissionPercentage(new BigDecimal("5.00"))
+                .build();
     }
 
     @Test
@@ -111,18 +120,19 @@ class TournamentRepositoryTest {
         // Arrange
         entityManager.persistAndFlush(testTournament);
 
-        Tournament secondTournament = new Tournament();
-        secondTournament.setName("Segundo Torneo");
-        secondTournament.setDescription("Otro torneo de prueba");
-        secondTournament.setCategory(testCategory);
-        secondTournament.setGameType(testGameType);
-        secondTournament.setOrganizer(testOrganizer);
-        secondTournament.setIsFree(true);
-        secondTournament.setMaxParticipants(16);
-        secondTournament.setCurrentParticipants(0);
-        secondTournament.setStartDate(LocalDateTime.now().plusDays(10));
-        secondTournament.setEndDate(LocalDateTime.now().plusDays(17));
-        secondTournament.setStatus(Tournament.TournamentStatus.PUBLISHED);
+        Tournament secondTournament = Tournament.builder()
+                .name("Segundo Torneo")
+                .description("Otro torneo de prueba")
+                .category(testCategory)
+                .gameType(testGameType)
+                .organizer(testOrganizer)
+                .isFree(true)
+                .maxParticipants(16)
+                .currentParticipants(0)
+                .startDate(LocalDateTime.now().plusDays(10))
+                .endDate(LocalDateTime.now().plusDays(17))
+                .status(Tournament.TournamentStatus.PUBLISHED)
+                .build();
         entityManager.persistAndFlush(secondTournament);
 
         // Act
@@ -137,18 +147,19 @@ class TournamentRepositoryTest {
         // Arrange
         entityManager.persistAndFlush(testTournament);
 
-        Tournament draftTournament = new Tournament();
-        draftTournament.setName("Torneo Borrador");
-        draftTournament.setDescription("Torneo en borrador");
-        draftTournament.setCategory(testCategory);
-        draftTournament.setGameType(testGameType);
-        draftTournament.setOrganizer(testOrganizer);
-        draftTournament.setIsFree(true);
-        draftTournament.setMaxParticipants(8);
-        draftTournament.setCurrentParticipants(0);
-        draftTournament.setStartDate(LocalDateTime.now().plusDays(20));
-        draftTournament.setEndDate(LocalDateTime.now().plusDays(27));
-        draftTournament.setStatus(Tournament.TournamentStatus.DRAFT);
+        Tournament draftTournament = Tournament.builder()
+                .name("Torneo Borrador")
+                .description("Torneo en borrador")
+                .category(testCategory)
+                .gameType(testGameType)
+                .organizer(testOrganizer)
+                .isFree(true)
+                .maxParticipants(8)
+                .currentParticipants(0)
+                .startDate(LocalDateTime.now().plusDays(20))
+                .endDate(LocalDateTime.now().plusDays(27))
+                .status(Tournament.TournamentStatus.DRAFT)
+                .build();
         entityManager.persistAndFlush(draftTournament);
 
         // Act
