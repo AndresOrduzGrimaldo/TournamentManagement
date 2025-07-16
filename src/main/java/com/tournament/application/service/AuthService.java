@@ -8,16 +8,14 @@ import com.tournament.domain.repository.UserRepository;
 import com.tournament.infrastructure.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 /**
- * Servicio de autenticación
+ * Servicio de aplicación para la autenticación de usuarios
  */
 @Service
 @RequiredArgsConstructor
@@ -28,7 +26,39 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final AuthenticationManager authenticationManager;
+
+    /**
+     * Autentica un usuario y genera un token JWT
+     * @param request Solicitud de login
+     * @return Respuesta de autenticación
+     */
+    public AuthResponse login(LoginRequest request) {
+        log.info("Intentando autenticar usuario: {}", request.getUsername());
+
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            log.warn("Contraseña incorrecta para usuario: {}", request.getUsername());
+            throw new IllegalArgumentException("Contraseña incorrecta");
+        }
+
+        if (!user.getIsActive()) {
+            log.warn("Usuario inactivo intentando autenticarse: {}", request.getUsername());
+            throw new IllegalArgumentException("Usuario inactivo");
+        }
+
+        String token = jwtTokenProvider.generateToken(user);
+        log.info("Usuario autenticado exitosamente: {}", request.getUsername());
+
+        return AuthResponse.builder()
+                .token(token)
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(user.getRole().name())
+                .build();
+    }
 
     /**
      * Registra un nuevo usuario
@@ -36,145 +66,119 @@ public class AuthService {
      * @return Respuesta de autenticación
      */
     public AuthResponse register(RegisterRequest request) {
-        log.info("Registrando nuevo usuario: {}", request.getUsername());
+        log.info("Intentando registrar nuevo usuario: {}", request.getUsername());
 
-        // Verificar si el usuario ya existe
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("El nombre de usuario ya está en uso");
+        // Verificar si el username ya existe
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            log.warn("Intento de registro con username existente: {}", request.getUsername());
+            throw new IllegalArgumentException("El nombre de usuario ya existe");
         }
 
-        if (userRepository.existsByEmail(request.getEmail())) {
+        // Verificar si el email ya existe
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            log.warn("Intento de registro con email existente: {}", request.getEmail());
             throw new IllegalArgumentException("El email ya está registrado");
         }
 
         // Crear nuevo usuario
-        User user = User.builder()
+        User newUser = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role(User.UserRole.valueOf(request.getRole()))
+                .role(User.UserRole.PARTICIPANT)
                 .isActive(true)
                 .build();
 
-        User savedUser = userRepository.save(user);
-        log.info("Usuario registrado exitosamente: {}", savedUser.getId());
-
-        // Generar token
+        User savedUser = userRepository.save(newUser);
         String token = jwtTokenProvider.generateToken(savedUser);
-        long expiresIn = jwtTokenProvider.getTimeUntilExpiration(token);
+
+        log.info("Usuario registrado exitosamente: {}", request.getUsername());
 
         return AuthResponse.builder()
                 .token(token)
-                .expiresIn(expiresIn)
-                .user(mapToUserInfo(savedUser))
-                .build();
-    }
-
-    /**
-     * Autentica un usuario
-     * @param request Solicitud de login
-     * @return Respuesta de autenticación
-     */
-    public AuthResponse login(LoginRequest request) {
-        log.info("Autenticando usuario: {}", request.getUsername());
-
-        // Autenticar usuario
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()
-                )
-        );
-
-        // Obtener usuario de la base de datos
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-
-        // Verificar que el usuario esté activo
-        if (!user.getIsActive()) {
-            throw new IllegalArgumentException("Usuario inactivo");
-        }
-
-        // Generar token
-        String token = jwtTokenProvider.generateToken(user);
-        long expiresIn = jwtTokenProvider.getTimeUntilExpiration(token);
-
-        log.info("Usuario autenticado exitosamente: {}", user.getId());
-
-        return AuthResponse.builder()
-                .token(token)
-                .expiresIn(expiresIn)
-                .user(mapToUserInfo(user))
+                .username(savedUser.getUsername())
+                .firstName(savedUser.getFirstName())
+                .lastName(savedUser.getLastName())
+                .role(savedUser.getRole().name())
                 .build();
     }
 
     /**
      * Valida un token JWT
-     * @param token Token JWT
+     * @param token Token a validar
      * @return true si el token es válido
      */
     public boolean validateToken(String token) {
-        return jwtTokenProvider.validateToken(token);
-    }
-
-    /**
-     * Obtiene información del usuario desde un token
-     * @param token Token JWT
-     * @return Información del usuario
-     */
-    public AuthResponse.UserInfo getUserInfoFromToken(String token) {
-        if (!validateToken(token)) {
-            throw new IllegalArgumentException("Token inválido");
+        log.debug("Validando token JWT");
+        
+        if (!jwtTokenProvider.validateToken(token)) {
+            log.warn("Token JWT inválido");
+            return false;
         }
 
-        String username = jwtTokenProvider.extractUsername(token);
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        String username = jwtTokenProvider.getUsernameFromToken(token);
+        Optional<User> user = userRepository.findByUsername(username);
 
-        return mapToUserInfo(user);
+        if (user.isEmpty()) {
+            log.warn("Usuario no encontrado para token válido: {}", username);
+            return false;
+        }
+
+        if (!user.get().getIsActive()) {
+            log.warn("Usuario inactivo con token válido: {}", username);
+            return false;
+        }
+
+        log.debug("Token JWT válido para usuario: {}", username);
+        return true;
     }
 
     /**
      * Refresca un token JWT
-     * @param token Token JWT actual
-     * @return Nuevo token JWT
+     * @param token Token actual
+     * @return Nuevo token
      */
     public AuthResponse refreshToken(String token) {
-        if (!validateToken(token)) {
+        log.info("Refrescando token JWT");
+
+        if (!jwtTokenProvider.validateToken(token)) {
             throw new IllegalArgumentException("Token inválido");
         }
 
-        String username = jwtTokenProvider.extractUsername(token);
+        String username = jwtTokenProvider.getUsernameFromToken(token);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        // Generar nuevo token
+        if (!user.getIsActive()) {
+            throw new IllegalArgumentException("Usuario inactivo");
+        }
+
         String newToken = jwtTokenProvider.generateToken(user);
-        long expiresIn = jwtTokenProvider.getTimeUntilExpiration(newToken);
+        log.info("Token refrescado exitosamente para usuario: {}", username);
 
         return AuthResponse.builder()
                 .token(newToken)
-                .expiresIn(expiresIn)
-                .user(mapToUserInfo(user))
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(user.getRole().name())
                 .build();
     }
 
     /**
-     * Mapea una entidad User a UserInfo
-     * @param user Entidad User
-     * @return UserInfo
+     * Cierra la sesión de un usuario (logout)
+     * @param token Token a invalidar
      */
-    private AuthResponse.UserInfo mapToUserInfo(User user) {
-        return AuthResponse.UserInfo.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .role(user.getRole().name())
-                .fullName(user.getFullName())
-                .build();
+    public void logout(String token) {
+        log.info("Cerrando sesión de usuario");
+        
+        // En una implementación real, aquí se invalidaría el token
+        // Por ahora, solo registramos la acción
+        if (jwtTokenProvider.validateToken(token)) {
+            String username = jwtTokenProvider.getUsernameFromToken(token);
+            log.info("Sesión cerrada para usuario: {}", username);
+        }
     }
 } 
