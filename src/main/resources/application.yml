@@ -1,0 +1,126 @@
+spring:
+  application:
+    name: tournament-management
+  
+  # Configuración de Base de Datos
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tournament_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+  
+  # Configuración JPA
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+    open-in-view: false
+  
+  # Configuración Flyway
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+  
+  # Configuración Redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  
+  # Configuración RabbitMQ
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+
+# Configuración del Servidor
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+
+# Configuración de Seguridad JWT
+jwt:
+  secret: ${JWT_SECRET:your-secret-key-here-must-be-at-least-256-bits-long}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 horas en ms
+
+# Configuración de Comisiones
+tournament:
+  commission:
+    percentage: ${COMMISSION_PERCENTAGE:5.0} # 5% por defecto
+  free:
+    max-tournaments-per-user: ${MAX_FREE_TOURNAMENTS:2}
+    max-participants: ${MAX_FREE_PARTICIPANTS:50}
+
+# Configuración de Monitoreo
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Configuración de Logging
+logging:
+  level:
+    com.tournament: INFO
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Configuración de Swagger/OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  info:
+    title: Tournament Management API
+    description: API para gestión de torneos de videojuegos
+    version: 1.0.0
+    contact:
+      name: Tournament Management Team
+      email: support@tournament.com
+
+# Configuración de Integración con Streaming
+streaming:
+  twitch:
+    client-id: ${TWITCH_CLIENT_ID:}
+    client-secret: ${TWITCH_CLIENT_SECRET:}
+    redirect-uri: ${TWITCH_REDIRECT_URI:http://localhost:8080/api/auth/twitch/callback}
+  discord:
+    webhook-url: ${DISCORD_WEBHOOK_URL:}
+  zoom:
+    api-key: ${ZOOM_API_KEY:}
+    api-secret: ${ZOOM_API_SECRET:} 
