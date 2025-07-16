@@ -43,26 +43,30 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Configurar datos de prueba
-        testUser = new User();
-        testUser.setId(1L);
-        testUser.setUsername("testuser");
-        testUser.setEmail("test@example.com");
-        testUser.setPassword("encodedPassword");
-        testUser.setFirstName("Test");
-        testUser.setLastName("User");
-        testUser.setRole("PARTICIPANT");
+        // Configurar datos de prueba usando builders
+        testUser = User.builder()
+                .id(1L)
+                .username("testuser")
+                .email("test@example.com")
+                .passwordHash("encodedPassword")
+                .firstName("Test")
+                .lastName("User")
+                .role(User.UserRole.PARTICIPANT)
+                .isActive(true)
+                .build();
 
-        loginRequest = new LoginRequest();
-        loginRequest.setUsername("testuser");
-        loginRequest.setPassword("password123");
+        loginRequest = LoginRequest.builder()
+                .username("testuser")
+                .password("password123")
+                .build();
 
-        registerRequest = new RegisterRequest();
-        registerRequest.setUsername("newuser");
-        registerRequest.setEmail("new@example.com");
-        registerRequest.setPassword("password123");
-        registerRequest.setFirstName("New");
-        registerRequest.setLastName("User");
+        registerRequest = RegisterRequest.builder()
+                .username("newuser")
+                .email("new@example.com")
+                .password("password123")
+                .firstName("New")
+                .lastName("User")
+                .build();
     }
 
     @Test
@@ -78,10 +82,11 @@ class AuthServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals("test.jwt.token", result.getToken());
-        assertEquals("testuser", result.getUsername());
-        assertEquals("Test", result.getFirstName());
-        assertEquals("User", result.getLastName());
-        assertEquals("PARTICIPANT", result.getRole());
+        assertNotNull(result.getUser());
+        assertEquals("testuser", result.getUser().getUsername());
+        assertEquals("Test", result.getUser().getFirstName());
+        assertEquals("User", result.getUser().getLastName());
+        assertEquals("PARTICIPANT", result.getUser().getRole());
 
         verify(userRepository).findByUsername("testuser");
         verify(passwordEncoder).matches("password123", "encodedPassword");
@@ -134,7 +139,8 @@ class AuthServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals("test.jwt.token", result.getToken());
-        assertEquals("newuser", result.getUsername());
+        assertNotNull(result.getUser());
+        assertEquals("newuser", result.getUser().getUsername());
 
         verify(userRepository).findByUsername("newuser");
         verify(userRepository).findByEmail("new@example.com");

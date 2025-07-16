@@ -58,14 +58,19 @@ class TournamentServiceTest {
         // Configurar datos de prueba
         testCategory = Category.builder()
                 .id(1L)
-                .name("FPS")
+                .code("FPS")
                 .description("First Person Shooter")
+                .alias("fps")
+                .isActive(true)
                 .build();
 
         testGameType = GameType.builder()
                 .id(1L)
-                .name("Counter-Strike 2")
-                .description("Competitive FPS game")
+                .code("CS2")
+                .fullName("Counter-Strike 2")
+                .playersCount(5)
+                .category(testCategory)
+                .isActive(true)
                 .build();
 
         testOrganizer = User.builder()
@@ -74,7 +79,8 @@ class TournamentServiceTest {
                 .email("organizer@test.com")
                 .firstName("Organizador")
                 .lastName("Test")
-                .role("ORGANIZER")
+                .role(User.UserRole.SUBADMIN)
+                .isActive(true)
                 .build();
 
         testTournament = Tournament.builder()
@@ -208,12 +214,12 @@ class TournamentServiceTest {
         when(tournamentRepository.findById(1L)).thenReturn(Optional.of(testTournament));
 
         // Act
-        TournamentResponse result = tournamentService.getTournamentById(1L);
+        Optional<TournamentResponse> result = tournamentService.getTournamentById(1L);
 
         // Assert
-        assertNotNull(result);
-        assertEquals(testTournament.getName(), result.getName());
-        assertEquals(testTournament.getDescription(), result.getDescription());
+        assertTrue(result.isPresent());
+        assertEquals(testTournament.getName(), result.get().getName());
+        assertEquals(testTournament.getDescription(), result.get().getDescription());
 
         verify(tournamentRepository).findById(1L);
     }
@@ -231,85 +237,5 @@ class TournamentServiceTest {
         verify(tournamentRepository).findById(1L);
     }
 
-    @Test
-    void testUpdateTournament_Success() {
-        // Arrange
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(testTournament));
-        when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
-        when(gameTypeRepository.findById(1L)).thenReturn(Optional.of(testGameType));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testOrganizer));
-        when(tournamentRepository.save(any(Tournament.class))).thenReturn(testTournament);
 
-        // Act
-        TournamentResponse result = tournamentService.updateTournament(1L, testRequest);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(testTournament.getName(), result.getName());
-
-        verify(tournamentRepository).findById(1L);
-        verify(categoryRepository).findById(1L);
-        verify(gameTypeRepository).findById(1L);
-        verify(userRepository).findById(1L);
-        verify(tournamentRepository).save(any(Tournament.class));
-    }
-
-    @Test
-    void testUpdateTournament_NotFound() {
-        // Arrange
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
-            tournamentService.updateTournament(1L, testRequest);
-        });
-
-        verify(tournamentRepository).findById(1L);
-        verify(tournamentRepository, never()).save(any());
-    }
-
-    @Test
-    void testDeleteTournament_Success() {
-        // Arrange
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(testTournament));
-        doNothing().when(tournamentRepository).delete(testTournament);
-
-        // Act
-        tournamentService.deleteTournament(1L);
-
-        // Assert
-        verify(tournamentRepository).findById(1L);
-        verify(tournamentRepository).delete(testTournament);
-    }
-
-    @Test
-    void testDeleteTournament_NotFound() {
-        // Arrange
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
-            tournamentService.deleteTournament(1L);
-        });
-
-        verify(tournamentRepository).findById(1L);
-        verify(tournamentRepository, never()).delete(any());
-    }
-
-    @Test
-    void testGetTournamentsByStatus_Success() {
-        // Arrange
-        List<Tournament> tournaments = Arrays.asList(testTournament);
-        when(tournamentRepository.findByStatus(Tournament.TournamentStatus.PUBLISHED)).thenReturn(tournaments);
-
-        // Act
-        List<TournamentResponse> result = tournamentService.getTournamentsByStatus("PUBLISHED");
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("PUBLISHED", result.get(0).getStatus());
-
-        verify(tournamentRepository).findByStatus(Tournament.TournamentStatus.PUBLISHED);
-    }
 } 

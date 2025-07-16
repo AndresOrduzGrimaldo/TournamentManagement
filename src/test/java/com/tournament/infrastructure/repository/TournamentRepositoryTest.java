@@ -50,14 +50,19 @@ class TournamentRepositoryTest {
     void setUp() {
         // Crear datos de prueba usando builders
         testCategory = Category.builder()
-                .name("FPS")
+                .code("FPS")
                 .description("First Person Shooter")
+                .alias("fps")
+                .isActive(true)
                 .build();
         testCategory = entityManager.persistAndFlush(testCategory);
 
         testGameType = GameType.builder()
-                .name("Counter-Strike 2")
-                .description("Competitive FPS game")
+                .code("CS2")
+                .fullName("Counter-Strike 2")
+                .playersCount(5)
+                .category(testCategory)
+                .isActive(true)
                 .build();
         testGameType = entityManager.persistAndFlush(testGameType);
 
