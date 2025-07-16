@@ -136,10 +136,15 @@ class AuthControllerTest {
     private com.tournament.application.dto.AuthResponse createMockAuthResponse() {
         return com.tournament.application.dto.AuthResponse.builder()
                 .token("test.jwt.token")
-                .username("testuser")
-                .firstName("Test")
-                .lastName("User")
-                .role("PARTICIPANT")
+                .user(com.tournament.application.dto.AuthResponse.UserInfo.builder()
+                        .id(1L)
+                        .username("testuser")
+                        .email("test@example.com")
+                        .firstName("Test")
+                        .lastName("User")
+                        .role("PARTICIPANT")
+                        .fullName("Test User")
+                        .build())
                 .build();
     }
 } 

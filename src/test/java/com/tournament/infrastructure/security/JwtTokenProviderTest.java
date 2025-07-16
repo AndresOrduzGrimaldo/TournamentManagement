@@ -1,11 +1,13 @@
 package com.tournament.infrastructure.security;
 
 import com.tournament.domain.entity.User;
+import com.tournament.domain.entity.User.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,14 +21,14 @@ class JwtTokenProviderTest {
     @BeforeEach
     void setUp() {
         jwtTokenProvider = new JwtTokenProvider();
-        jwtTokenProvider.setJwtSecret("testSecretKeyForTestingPurposesOnly12345678901234567890");
-        jwtTokenProvider.setJwtExpiration(86400000L); // 24 horas
+        ReflectionTestUtils.setField(jwtTokenProvider, "jwtSecret", "testSecretKeyForTestingPurposesOnly12345678901234567890");
+        ReflectionTestUtils.setField(jwtTokenProvider, "jwtExpiration", 86400000L); // 24 horas
 
         testUser = new User();
         testUser.setId(1L);
         testUser.setUsername("testuser");
         testUser.setEmail("test@example.com");
-        testUser.setRole("PARTICIPANT");
+        testUser.setRole(UserRole.PARTICIPANT);
     }
 
     @Test
@@ -89,25 +91,25 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void testGetUsernameFromToken_ValidToken() {
+    void testExtractUsername_ValidToken() {
         // Arrange
         String token = jwtTokenProvider.generateToken(testUser);
 
         // Act
-        String username = jwtTokenProvider.getUsernameFromToken(token);
+        String username = jwtTokenProvider.extractUsername(token);
 
         // Assert
         assertEquals("testuser", username);
     }
 
     @Test
-    void testGetUsernameFromToken_InvalidToken() {
+    void testExtractUsername_InvalidToken() {
         // Arrange
         String invalidToken = "invalid.token.here";
 
         // Act & Assert
         assertThrows(Exception.class, () -> {
-            jwtTokenProvider.getUsernameFromToken(invalidToken);
+            jwtTokenProvider.extractUsername(invalidToken);
         });
     }
 
@@ -115,8 +117,8 @@ class JwtTokenProviderTest {
     void testTokenExpiration() {
         // Arrange - Create token provider with short expiration
         JwtTokenProvider shortExpirationProvider = new JwtTokenProvider();
-        shortExpirationProvider.setJwtSecret("testSecretKeyForTestingPurposesOnly12345678901234567890");
-        shortExpirationProvider.setJwtExpiration(1L); // 1 millisecond
+        ReflectionTestUtils.setField(shortExpirationProvider, "jwtSecret", "testSecretKeyForTestingPurposesOnly12345678901234567890");
+        ReflectionTestUtils.setField(shortExpirationProvider, "jwtExpiration", 1L); // 1 millisecond
 
         // Act
         String token = shortExpirationProvider.generateToken(testUser);

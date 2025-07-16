@@ -74,7 +74,7 @@ class AuthServiceTest {
         // Arrange
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("password123", "encodedPassword")).thenReturn(true);
-        when(jwtTokenProvider.generateToken(testUser)).thenReturn("test.jwt.token");
+        when(jwtTokenProvider.generateToken((User) testUser)).thenReturn("test.jwt.token");
 
         // Act
         AuthResponse result = authService.login(loginRequest);
@@ -90,7 +90,7 @@ class AuthServiceTest {
 
         verify(userRepository).findByUsername("testuser");
         verify(passwordEncoder).matches("password123", "encodedPassword");
-        verify(jwtTokenProvider).generateToken(testUser);
+        verify(jwtTokenProvider).generateToken((User) testUser);
     }
 
     @Test
@@ -105,7 +105,7 @@ class AuthServiceTest {
 
         verify(userRepository).findByUsername("testuser");
         verify(passwordEncoder, never()).matches(any(), any());
-        verify(jwtTokenProvider, never()).generateToken(any());
+        verify(jwtTokenProvider, never()).generateToken(any(User.class));
     }
 
     @Test
@@ -121,7 +121,7 @@ class AuthServiceTest {
 
         verify(userRepository).findByUsername("testuser");
         verify(passwordEncoder).matches("password123", "encodedPassword");
-        verify(jwtTokenProvider, never()).generateToken(any());
+        verify(jwtTokenProvider, never()).generateToken(any(User.class));
     }
 
     @Test
@@ -163,6 +163,7 @@ class AuthServiceTest {
         verify(userRepository, never()).findByEmail(any());
         verify(passwordEncoder, never()).encode(any());
         verify(userRepository, never()).save(any());
+        verify(jwtTokenProvider, never()).generateToken(any(User.class));
     }
 
     @Test
@@ -187,7 +188,7 @@ class AuthServiceTest {
         // Arrange
         String token = "valid.jwt.token";
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
-        when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn("testuser");
+        when(jwtTokenProvider.extractUsername(token)).thenReturn("testuser");
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
 
         // Act
@@ -197,7 +198,7 @@ class AuthServiceTest {
         assertTrue(result);
 
         verify(jwtTokenProvider).validateToken(token);
-        verify(jwtTokenProvider).getUsernameFromToken(token);
+        verify(jwtTokenProvider).extractUsername(token);
         verify(userRepository).findByUsername("testuser");
     }
 
@@ -214,7 +215,7 @@ class AuthServiceTest {
         assertFalse(result);
 
         verify(jwtTokenProvider).validateToken(token);
-        verify(jwtTokenProvider, never()).getUsernameFromToken(any());
+        verify(jwtTokenProvider, never()).extractUsername(any());
         verify(userRepository, never()).findByUsername(any());
     }
 
@@ -223,7 +224,7 @@ class AuthServiceTest {
         // Arrange
         String token = "valid.jwt.token";
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
-        when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn("testuser");
+        when(jwtTokenProvider.extractUsername(token)).thenReturn("testuser");
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
 
         // Act
@@ -233,7 +234,7 @@ class AuthServiceTest {
         assertFalse(result);
 
         verify(jwtTokenProvider).validateToken(token);
-        verify(jwtTokenProvider).getUsernameFromToken(token);
+        verify(jwtTokenProvider).extractUsername(token);
         verify(userRepository).findByUsername("testuser");
     }
 } 
