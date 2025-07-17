@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: tournament-postgres-dev
+    environment:
+      POSTGRES_DB: tournament_dev
+      POSTGRES_USER: tournament_user
+      POSTGRES_PASSWORD: tournament_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - tournament-network
+
+  # Redis para caché
+  redis:
+    image: redis:7-alpine
+    container_name: tournament-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - tournament-network
+
+  # RabbitMQ para mensajería
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: tournament-rabbitmq-dev
+    environment:
+      RABBITMQ_DEFAULT_USER: tournament_user
+      RABBITMQ_DEFAULT_PASS: tournament_pass
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - tournament-network
+
+  # Aplicación Spring Boot
+  tournament-app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: development
+    container_name: tournament-app-dev
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tournament_dev
+      SPRING_DATASOURCE_USERNAME: tournament_user
+      SPRING_DATASOURCE_PASSWORD: tournament_pass
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: tournament_user
+      SPRING_RABBITMQ_PASSWORD: tournament_pass
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - tournament-network
+    volumes:
+      - ../logs:/app/logs
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  tournament-network:
+    driver: bridge 

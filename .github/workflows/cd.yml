@@ -1,0 +1,218 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
+
+env:
+  KUBECONFIG: ${{ secrets.KUBECONFIG }}
+
+jobs:
+  # Job de despliegue en staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+        
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        
+    - name: Deploy to staging
+      run: |
+        kubectl apply -f kubernetes/namespace.yml
+        kubectl apply -f kubernetes/configmap.yml
+        kubectl apply -f kubernetes/secret.yml
+        kubectl apply -f kubernetes/deployment.yml
+        kubectl apply -f kubernetes/service.yml
+        kubectl rollout status deployment/tournament-management -n tournament
+        
+    - name: Run smoke tests
+      run: |
+        # Esperar a que la aplicación esté lista
+        kubectl wait --for=condition=ready pod -l app=tournament-management -n tournament --timeout=300s
+        
+        # Ejecutar tests de humo
+        curl -f http://staging.tournament.example.com/actuator/health || exit 1
+        
+    - name: Notify staging deployment
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "✅ Staging deployment successful"
+        else
+          echo "❌ Staging deployment failed"
+        fi
+
+  # Job de despliegue en producción
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [deploy-staging]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+        
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        
+    - name: Create production namespace
+      run: kubectl apply -f kubernetes/namespace.yml
+      
+    - name: Deploy production secrets
+      run: |
+        kubectl apply -f kubernetes/secret.yml
+        kubectl apply -f kubernetes/configmap.yml
+        
+    - name: Deploy application
+      run: |
+        kubectl apply -f kubernetes/deployment.yml
+        kubectl apply -f kubernetes/service.yml
+        kubectl apply -f kubernetes/ingress.yml
+        
+    - name: Wait for deployment
+      run: |
+        kubectl rollout status deployment/tournament-management -n tournament --timeout=600s
+        
+    - name: Run health checks
+      run: |
+        # Verificar que todos los pods estén listos
+        kubectl wait --for=condition=ready pod -l app=tournament-management -n tournament --timeout=300s
+        
+        # Verificar health endpoint
+        kubectl port-forward svc/tournament-service 8080:80 -n tournament &
+        sleep 10
+        curl -f http://localhost:8080/actuator/health || exit 1
+        
+    - name: Create GitHub release
+      uses: actions/create-release@v1
+      if: success()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        body: |
+          Automated release for commit ${{ github.sha }}
+          
+          Changes:
+          - Deployed to production
+          - All health checks passed
+        draft: false
+        prerelease: false
+
+  # Job de monitoreo post-despliegue
+  monitor-deployment:
+    name: Monitor Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+        
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        
+    - name: Monitor application health
+      run: |
+        # Monitorear por 10 minutos
+        for i in {1..60}; do
+          echo "Health check $i/60"
+          
+          # Verificar pods
+          kubectl get pods -n tournament
+          
+          # Verificar endpoints
+          kubectl get endpoints -n tournament
+          
+          # Verificar logs por errores
+          kubectl logs -l app=tournament-management -n tournament --tail=50 | grep -i error || echo "No errors found"
+          
+          sleep 10
+        done
+        
+    - name: Generate deployment report
+      run: |
+        echo "=== Deployment Report ===" > deployment-report.txt
+        echo "Timestamp: $(date)" >> deployment-report.txt
+        echo "Commit: ${{ github.sha }}" >> deployment-report.txt
+        echo "Branch: ${{ github.ref }}" >> deployment-report.txt
+        
+        echo "=== Pod Status ===" >> deployment-report.txt
+        kubectl get pods -n tournament >> deployment-report.txt
+        
+        echo "=== Service Status ===" >> deployment-report.txt
+        kubectl get services -n tournament >> deployment-report.txt
+        
+        echo "=== Recent Logs ===" >> deployment-report.txt
+        kubectl logs -l app=tournament-management -n tournament --tail=20 >> deployment-report.txt
+        
+    - name: Upload deployment report
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-report
+        path: deployment-report.txt
+
+  # Job de rollback automático
+  rollback:
+    name: Rollback if needed
+    runs-on: ubuntu-latest
+    needs: [deploy-production, monitor-deployment]
+    if: failure() && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+        
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        
+    - name: Rollback deployment
+      run: |
+        echo "🚨 Rolling back deployment due to failure"
+        kubectl rollout undo deployment/tournament-management -n tournament
+        kubectl rollout status deployment/tournament-management -n tournament
+        
+    - name: Notify rollback
+      run: |
+        echo "🔄 Rollback completed"
+        # Aquí se puede agregar notificación por Slack, email, etc. 

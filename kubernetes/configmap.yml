@@ -1,0 +1,159 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tournament-config
+  namespace: tournament
+  labels:
+    app: tournament-management
+data:
+  # Configuración de la aplicación
+  application.yml: |
+    spring:
+      application:
+        name: tournament-management
+      
+      # Configuración de logging
+      logging:
+        level:
+          com.tournament: INFO
+          org.springframework.security: DEBUG
+        pattern:
+          console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+          file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+        file:
+          name: /app/logs/tournament-management.log
+      
+      # Configuración de servidor
+      server:
+        port: 8080
+        compression:
+          enabled: true
+          mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+          min-response-size: 1024
+      
+      # Configuración de actuator
+      management:
+        endpoints:
+          web:
+            exposure:
+              include: health,info,metrics,prometheus
+            base-path: /actuator
+        endpoint:
+          health:
+            show-details: when-authorized
+            show-components: always
+        metrics:
+          export:
+            prometheus:
+              enabled: true
+      
+      # Configuración de caché
+      cache:
+        type: redis
+        redis:
+          time-to-live: 600000
+          cache-null-values: false
+      
+      # Configuración de mensajería
+      rabbitmq:
+        listener:
+          simple:
+            concurrency: 3
+            max-concurrency: 10
+            prefetch: 1
+            default-requeue-rejected: false
+      
+      # Configuración de JPA
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: false
+        properties:
+          hibernate:
+            dialect: org.hibernate.dialect.PostgreSQLDialect
+            format_sql: true
+            jdbc:
+              batch_size: 20
+              fetch_size: 20
+            order_inserts: true
+            order_updates: true
+            batch_versioned_data: true
+      
+      # Configuración de Flyway
+      flyway:
+        enabled: true
+        baseline-on-migrate: true
+        validate-on-migrate: true
+        locations: classpath:db/migration
+      
+      # Configuración de seguridad
+      security:
+        jwt:
+          expiration: 86400000
+          refresh-expiration: 604800000
+      
+      # Configuración de OpenAPI
+      springdoc:
+        api-docs:
+          path: /api-docs
+        swagger-ui:
+          path: /swagger-ui.html
+          operations-sorter: method
+          tags-sorter: alpha
+      
+      # Configuración de archivos
+      servlet:
+        multipart:
+          max-file-size: 10MB
+          max-request-size: 10MB
+      
+      # Configuración de validación
+      validation:
+        enabled: true
+      
+      # Configuración de auditoría
+      data:
+        jpa:
+          auditing:
+            enabled: true
+            auditor-aware-ref: auditorAwareImpl
+      
+      # Configuración de caché distribuido
+      cache:
+        type: redis
+        redis:
+          time-to-live: 600000
+          cache-null-values: false
+          use-key-prefix: true
+          key-prefix: "tournament:"
+      
+      # Configuración de métricas
+      metrics:
+        export:
+          prometheus:
+            enabled: true
+            descriptions: true
+            step: 60s
+      
+      # Configuración de health checks
+      health:
+        redis:
+          enabled: true
+        rabbit:
+          enabled: true
+        db:
+          enabled: true
+      
+      # Configuración de rate limiting
+      rate-limit:
+        enabled: true
+        requests-per-minute: 100
+        burst-capacity: 200
+      
+      # Configuración de CORS
+      cors:
+        allowed-origins: "*"
+        allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+        allowed-headers: "*"
+        allow-credentials: true
+        max-age: 3600 
