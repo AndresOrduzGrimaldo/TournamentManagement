@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
@@ -43,30 +44,28 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Configurar datos de prueba usando builders
-        testUser = User.builder()
-                .id(1L)
-                .username("testuser")
-                .email("test@example.com")
-                .passwordHash("encodedPassword")
-                .firstName("Test")
-                .lastName("User")
-                .role(User.UserRole.PARTICIPANT)
-                .isActive(true)
-                .build();
+        // Configurar datos de prueba usando reflection para evitar problemas de Lombok
+        testUser = new User();
+        ReflectionTestUtils.setField(testUser, "id", 1L);
+        ReflectionTestUtils.setField(testUser, "username", "testuser");
+        ReflectionTestUtils.setField(testUser, "email", "test@example.com");
+        ReflectionTestUtils.setField(testUser, "passwordHash", "encodedPassword");
+        ReflectionTestUtils.setField(testUser, "firstName", "Test");
+        ReflectionTestUtils.setField(testUser, "lastName", "User");
+        ReflectionTestUtils.setField(testUser, "role", User.UserRole.PARTICIPANT);
+        ReflectionTestUtils.setField(testUser, "isActive", true);
 
-        loginRequest = LoginRequest.builder()
-                .username("testuser")
-                .password("password123")
-                .build();
+        loginRequest = new LoginRequest();
+        ReflectionTestUtils.setField(loginRequest, "username", "testuser");
+        ReflectionTestUtils.setField(loginRequest, "password", "password123");
 
-        registerRequest = RegisterRequest.builder()
-                .username("newuser")
-                .email("new@example.com")
-                .password("password123")
-                .firstName("New")
-                .lastName("User")
-                .build();
+        registerRequest = new RegisterRequest();
+        ReflectionTestUtils.setField(registerRequest, "username", "newuser");
+        ReflectionTestUtils.setField(registerRequest, "email", "new@example.com");
+        ReflectionTestUtils.setField(registerRequest, "firstName", "New");
+        ReflectionTestUtils.setField(registerRequest, "lastName", "User");
+        ReflectionTestUtils.setField(registerRequest, "password", "password123");
+        ReflectionTestUtils.setField(registerRequest, "role", "PARTICIPANT");
     }
 
     @Test
@@ -81,12 +80,12 @@ class AuthServiceTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals("test.jwt.token", result.getToken());
-        assertNotNull(result.getUser());
-        assertEquals("testuser", result.getUser().getUsername());
-        assertEquals("Test", result.getUser().getFirstName());
-        assertEquals("User", result.getUser().getLastName());
-        assertEquals("PARTICIPANT", result.getUser().getRole());
+        assertEquals("test.jwt.token", ReflectionTestUtils.getField(result, "token"));
+        assertNotNull(ReflectionTestUtils.getField(result, "user"));
+        assertEquals("testuser", ReflectionTestUtils.getField(ReflectionTestUtils.getField(result, "user"), "username"));
+        assertEquals("Test", ReflectionTestUtils.getField(ReflectionTestUtils.getField(result, "user"), "firstName"));
+        assertEquals("User", ReflectionTestUtils.getField(ReflectionTestUtils.getField(result, "user"), "lastName"));
+        assertEquals("PARTICIPANT", ReflectionTestUtils.getField(ReflectionTestUtils.getField(result, "user"), "role"));
 
         verify(userRepository).findByUsername("testuser");
         verify(passwordEncoder).matches("password123", "encodedPassword");
@@ -127,10 +126,20 @@ class AuthServiceTest {
     @Test
     void testRegister_Success() {
         // Arrange
+        User newUser = new User();
+        ReflectionTestUtils.setField(newUser, "id", 2L);
+        ReflectionTestUtils.setField(newUser, "username", "newuser");
+        ReflectionTestUtils.setField(newUser, "email", "new@example.com");
+        ReflectionTestUtils.setField(newUser, "passwordHash", "encodedPassword");
+        ReflectionTestUtils.setField(newUser, "firstName", "New");
+        ReflectionTestUtils.setField(newUser, "lastName", "User");
+        ReflectionTestUtils.setField(newUser, "role", User.UserRole.PARTICIPANT);
+        ReflectionTestUtils.setField(newUser, "isActive", true);
+
         when(userRepository.findByUsername("newuser")).thenReturn(Optional.empty());
         when(userRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(userRepository.save(any(User.class))).thenReturn(newUser);
         when(jwtTokenProvider.generateToken(any(User.class))).thenReturn("test.jwt.token");
 
         // Act
@@ -138,9 +147,9 @@ class AuthServiceTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals("test.jwt.token", result.getToken());
-        assertNotNull(result.getUser());
-        assertEquals("newuser", result.getUser().getUsername());
+        assertEquals("test.jwt.token", ReflectionTestUtils.getField(result, "token"));
+        assertNotNull(ReflectionTestUtils.getField(result, "user"));
+        assertEquals("newuser", ReflectionTestUtils.getField(ReflectionTestUtils.getField(result, "user"), "username"));
 
         verify(userRepository).findByUsername("newuser");
         verify(userRepository).findByEmail("new@example.com");

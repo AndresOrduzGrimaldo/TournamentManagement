@@ -11,9 +11,12 @@ import com.tournament.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,6 +26,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@TestPropertySource(properties = "spring.flyway.enabled=false")
 @ActiveProfiles("test")
 class TournamentRepositoryTest {
 
@@ -48,50 +53,50 @@ class TournamentRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // Crear datos de prueba usando builders
-        testCategory = Category.builder()
-                .code("FPS")
-                .description("First Person Shooter")
-                .alias("fps")
-                .isActive(true)
-                .build();
+        // Crear datos de prueba usando ReflectionTestUtils
+        testCategory = new Category();
+        ReflectionTestUtils.setField(testCategory, "code", "FPS");
+        ReflectionTestUtils.setField(testCategory, "description", "First Person Shooter");
+        ReflectionTestUtils.setField(testCategory, "alias", "fps");
+        ReflectionTestUtils.setField(testCategory, "isActive", true);
+        ReflectionTestUtils.setField(testCategory, "createdAt", java.time.LocalDateTime.now());
         testCategory = entityManager.persistAndFlush(testCategory);
 
-        testGameType = GameType.builder()
-                .code("CS2")
-                .fullName("Counter-Strike 2")
-                .playersCount(5)
-                .category(testCategory)
-                .isActive(true)
-                .build();
+        testGameType = new GameType();
+        ReflectionTestUtils.setField(testGameType, "code", "CS2");
+        ReflectionTestUtils.setField(testGameType, "fullName", "Counter-Strike 2");
+        ReflectionTestUtils.setField(testGameType, "playersCount", 5);
+        ReflectionTestUtils.setField(testGameType, "category", testCategory);
+        ReflectionTestUtils.setField(testGameType, "isActive", true);
+        ReflectionTestUtils.setField(testGameType, "createdAt", java.time.LocalDateTime.now());
         testGameType = entityManager.persistAndFlush(testGameType);
 
-        testOrganizer = User.builder()
-                .username("organizer1")
-                .email("organizer@test.com")
-                .passwordHash("password")
-                .firstName("Organizador")
-                .lastName("Test")
-                .role(User.UserRole.SUBADMIN)
-                .isActive(true)
-                .build();
+        testOrganizer = new User();
+        ReflectionTestUtils.setField(testOrganizer, "username", "organizer1");
+        ReflectionTestUtils.setField(testOrganizer, "email", "organizer@test.com");
+        ReflectionTestUtils.setField(testOrganizer, "passwordHash", "password");
+        ReflectionTestUtils.setField(testOrganizer, "firstName", "Organizador");
+        ReflectionTestUtils.setField(testOrganizer, "lastName", "Test");
+        ReflectionTestUtils.setField(testOrganizer, "role", User.UserRole.SUBADMIN);
+        ReflectionTestUtils.setField(testOrganizer, "isActive", true);
+        ReflectionTestUtils.setField(testOrganizer, "createdAt", java.time.LocalDateTime.now());
         testOrganizer = entityManager.persistAndFlush(testOrganizer);
 
-        testTournament = Tournament.builder()
-                .name("Torneo de Prueba")
-                .description("Torneo para pruebas unitarias")
-                .category(testCategory)
-                .gameType(testGameType)
-                .organizer(testOrganizer)
-                .isFree(false)
-                .price(new BigDecimal("50.00"))
-                .maxParticipants(32)
-                .currentParticipants(0)
-                .startDate(LocalDateTime.now().plusDays(7))
-                .endDate(LocalDateTime.now().plusDays(14))
-                .status(Tournament.TournamentStatus.PUBLISHED)
-                .commissionPercentage(new BigDecimal("5.00"))
-                .build();
+        testTournament = new Tournament();
+        ReflectionTestUtils.setField(testTournament, "name", "Torneo de Prueba");
+        ReflectionTestUtils.setField(testTournament, "description", "Torneo para pruebas unitarias");
+        ReflectionTestUtils.setField(testTournament, "category", testCategory);
+        ReflectionTestUtils.setField(testTournament, "gameType", testGameType);
+        ReflectionTestUtils.setField(testTournament, "organizer", testOrganizer);
+        ReflectionTestUtils.setField(testTournament, "isFree", false);
+        ReflectionTestUtils.setField(testTournament, "price", new java.math.BigDecimal("50.00"));
+        ReflectionTestUtils.setField(testTournament, "maxParticipants", 32);
+        ReflectionTestUtils.setField(testTournament, "currentParticipants", 0);
+        ReflectionTestUtils.setField(testTournament, "startDate", java.time.LocalDateTime.now().plusDays(7));
+        ReflectionTestUtils.setField(testTournament, "endDate", java.time.LocalDateTime.now().plusDays(14));
+        ReflectionTestUtils.setField(testTournament, "status", Tournament.TournamentStatus.PUBLISHED);
+        ReflectionTestUtils.setField(testTournament, "commissionPercentage", new java.math.BigDecimal("5.00"));
+        ReflectionTestUtils.setField(testTournament, "createdAt", java.time.LocalDateTime.now());
     }
 
     @Test
@@ -100,11 +105,11 @@ class TournamentRepositoryTest {
         Tournament savedTournament = tournamentRepository.save(testTournament);
 
         // Assert
-        assertNotNull(savedTournament.getId());
-        assertEquals("Torneo de Prueba", savedTournament.getName());
-        assertEquals(testCategory.getId(), savedTournament.getCategory().getId());
-        assertEquals(testGameType.getId(), savedTournament.getGameType().getId());
-        assertEquals(testOrganizer.getId(), savedTournament.getOrganizer().getId());
+        assertNotNull(ReflectionTestUtils.getField(savedTournament, "id"));
+        assertEquals("Torneo de Prueba", ReflectionTestUtils.getField(savedTournament, "name"));
+        assertEquals(ReflectionTestUtils.getField(testCategory, "id"), ReflectionTestUtils.getField(ReflectionTestUtils.getField(savedTournament, "category"), "id"));
+        assertEquals(ReflectionTestUtils.getField(testGameType, "id"), ReflectionTestUtils.getField(ReflectionTestUtils.getField(savedTournament, "gameType"), "id"));
+        assertEquals(ReflectionTestUtils.getField(testOrganizer, "id"), ReflectionTestUtils.getField(ReflectionTestUtils.getField(savedTournament, "organizer"), "id"));
     }
 
     @Test
@@ -113,11 +118,11 @@ class TournamentRepositoryTest {
         Tournament savedTournament = entityManager.persistAndFlush(testTournament);
 
         // Act
-        Optional<Tournament> found = tournamentRepository.findById(savedTournament.getId());
+        Optional<Tournament> found = tournamentRepository.findById((Long) ReflectionTestUtils.getField(savedTournament, "id"));
 
         // Assert
         assertTrue(found.isPresent());
-        assertEquals("Torneo de Prueba", found.get().getName());
+        assertEquals("Torneo de Prueba", ReflectionTestUtils.getField(found.get(), "name"));
     }
 
     @Test
@@ -125,19 +130,19 @@ class TournamentRepositoryTest {
         // Arrange
         entityManager.persistAndFlush(testTournament);
 
-        Tournament secondTournament = Tournament.builder()
-                .name("Segundo Torneo")
-                .description("Otro torneo de prueba")
-                .category(testCategory)
-                .gameType(testGameType)
-                .organizer(testOrganizer)
-                .isFree(true)
-                .maxParticipants(16)
-                .currentParticipants(0)
-                .startDate(LocalDateTime.now().plusDays(10))
-                .endDate(LocalDateTime.now().plusDays(17))
-                .status(Tournament.TournamentStatus.PUBLISHED)
-                .build();
+        Tournament secondTournament = new Tournament();
+        ReflectionTestUtils.setField(secondTournament, "name", "Segundo Torneo");
+        ReflectionTestUtils.setField(secondTournament, "description", "Otro torneo de prueba");
+        ReflectionTestUtils.setField(secondTournament, "category", testCategory);
+        ReflectionTestUtils.setField(secondTournament, "gameType", testGameType);
+        ReflectionTestUtils.setField(secondTournament, "organizer", testOrganizer);
+        ReflectionTestUtils.setField(secondTournament, "isFree", true);
+        ReflectionTestUtils.setField(secondTournament, "maxParticipants", 16);
+        ReflectionTestUtils.setField(secondTournament, "currentParticipants", 0);
+        ReflectionTestUtils.setField(secondTournament, "startDate", java.time.LocalDateTime.now().plusDays(10));
+        ReflectionTestUtils.setField(secondTournament, "endDate", java.time.LocalDateTime.now().plusDays(17));
+        ReflectionTestUtils.setField(secondTournament, "status", Tournament.TournamentStatus.PUBLISHED);
+        ReflectionTestUtils.setField(secondTournament, "createdAt", java.time.LocalDateTime.now());
         entityManager.persistAndFlush(secondTournament);
 
         // Act
@@ -152,19 +157,19 @@ class TournamentRepositoryTest {
         // Arrange
         entityManager.persistAndFlush(testTournament);
 
-        Tournament draftTournament = Tournament.builder()
-                .name("Torneo Borrador")
-                .description("Torneo en borrador")
-                .category(testCategory)
-                .gameType(testGameType)
-                .organizer(testOrganizer)
-                .isFree(true)
-                .maxParticipants(8)
-                .currentParticipants(0)
-                .startDate(LocalDateTime.now().plusDays(20))
-                .endDate(LocalDateTime.now().plusDays(27))
-                .status(Tournament.TournamentStatus.DRAFT)
-                .build();
+        Tournament draftTournament = new Tournament();
+        ReflectionTestUtils.setField(draftTournament, "name", "Torneo Borrador");
+        ReflectionTestUtils.setField(draftTournament, "description", "Torneo en borrador");
+        ReflectionTestUtils.setField(draftTournament, "category", testCategory);
+        ReflectionTestUtils.setField(draftTournament, "gameType", testGameType);
+        ReflectionTestUtils.setField(draftTournament, "organizer", testOrganizer);
+        ReflectionTestUtils.setField(draftTournament, "isFree", true);
+        ReflectionTestUtils.setField(draftTournament, "maxParticipants", 8);
+        ReflectionTestUtils.setField(draftTournament, "currentParticipants", 0);
+        ReflectionTestUtils.setField(draftTournament, "startDate", java.time.LocalDateTime.now().plusDays(20));
+        ReflectionTestUtils.setField(draftTournament, "endDate", java.time.LocalDateTime.now().plusDays(27));
+        ReflectionTestUtils.setField(draftTournament, "status", Tournament.TournamentStatus.DRAFT);
+        ReflectionTestUtils.setField(draftTournament, "createdAt", java.time.LocalDateTime.now());
         entityManager.persistAndFlush(draftTournament);
 
         // Act
@@ -172,7 +177,7 @@ class TournamentRepositoryTest {
 
         // Assert
         assertEquals(1, publishedTournaments.size());
-        assertEquals("Torneo de Prueba", publishedTournaments.get(0).getName());
+        assertEquals("Torneo de Prueba", ReflectionTestUtils.getField(publishedTournaments.get(0), "name"));
     }
 
     @Test
@@ -184,7 +189,7 @@ class TournamentRepositoryTest {
         tournamentRepository.delete(savedTournament);
 
         // Assert
-        Optional<Tournament> found = tournamentRepository.findById(savedTournament.getId());
+        Optional<Tournament> found = tournamentRepository.findById((Long) ReflectionTestUtils.getField(savedTournament, "id"));
         assertFalse(found.isPresent());
     }
 } 

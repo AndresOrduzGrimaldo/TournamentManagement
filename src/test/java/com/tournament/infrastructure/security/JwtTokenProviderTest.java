@@ -15,20 +15,22 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 class JwtTokenProviderTest {
 
+    private static final String TEST_SECRET = "1234567890123456789012345678901234567890123456789012345678901234";
+
     private JwtTokenProvider jwtTokenProvider;
     private User testUser;
 
     @BeforeEach
     void setUp() {
         jwtTokenProvider = new JwtTokenProvider();
-        ReflectionTestUtils.setField(jwtTokenProvider, "jwtSecret", "testSecretKeyForTestingPurposesOnly12345678901234567890");
+        ReflectionTestUtils.setField(jwtTokenProvider, "jwtSecret", TEST_SECRET);
         ReflectionTestUtils.setField(jwtTokenProvider, "jwtExpiration", 86400000L); // 24 horas
 
         testUser = new User();
-        testUser.setId(1L);
-        testUser.setUsername("testuser");
-        testUser.setEmail("test@example.com");
-        testUser.setRole(UserRole.PARTICIPANT);
+        ReflectionTestUtils.setField(testUser, "id", 1L);
+        ReflectionTestUtils.setField(testUser, "username", "testuser");
+        ReflectionTestUtils.setField(testUser, "email", "test@example.com");
+        ReflectionTestUtils.setField(testUser, "role", UserRole.PARTICIPANT);
     }
 
     @Test
@@ -117,7 +119,7 @@ class JwtTokenProviderTest {
     void testTokenExpiration() {
         // Arrange - Create token provider with short expiration
         JwtTokenProvider shortExpirationProvider = new JwtTokenProvider();
-        ReflectionTestUtils.setField(shortExpirationProvider, "jwtSecret", "testSecretKeyForTestingPurposesOnly12345678901234567890");
+        ReflectionTestUtils.setField(shortExpirationProvider, "jwtSecret", TEST_SECRET);
         ReflectionTestUtils.setField(shortExpirationProvider, "jwtExpiration", 1L); // 1 millisecond
 
         // Act

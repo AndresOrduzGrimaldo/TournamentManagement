@@ -25,7 +25,7 @@ import jakarta.validation.Valid;
  * Controlador para autenticación y autorización
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Slf4j
 @Validated
