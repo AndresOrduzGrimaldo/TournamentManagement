@@ -185,11 +185,12 @@ public class TicketService {
             throw new IllegalStateException("No se puede cancelar un ticket ya usado");
         }
 
+        boolean wasActive = Ticket.TicketStatus.ACTIVE.equals(ticket.getStatus()); // Guardar estado previo
         ticket.cancel();
         ticketRepository.save(ticket);
 
-        // Decrementar contador de participantes si el ticket estaba activo
-        if (Ticket.TicketStatus.ACTIVE.equals(ticket.getStatus())) {
+        // Decrementar contador de participantes si el ticket estaba activo antes de cancelar
+        if (wasActive) {
             Tournament tournament = ticket.getTournament();
             tournament.decrementParticipants();
             tournamentRepository.save(tournament);
@@ -211,7 +212,7 @@ public class TicketService {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream);
             
-            return Base64.getEncoder().encodeToString(outputStream.toByteArray());
+            return "data:image/png;base64," + Base64.getEncoder().encodeToString(outputStream.toByteArray());
         } catch (WriterException | IOException e) {
             log.error("Error generando imagen QR: {}", e.getMessage());
             throw new RuntimeException("Error generando imagen QR", e);

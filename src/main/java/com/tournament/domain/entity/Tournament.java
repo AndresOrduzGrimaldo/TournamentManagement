@@ -158,4 +158,12 @@ public class Tournament {
         return ticketPrice.multiply(this.commissionPercentage)
                          .divide(BigDecimal.valueOf(100), 2, BigDecimal.ROUND_HALF_UP);
     }
+
+    /**
+     * Obtiene si el torneo es gratuito
+     * @return true si es gratuito
+     */
+    public Boolean getIsFree() {
+        return this.isFree;
+    }
 } 
