@@ -287,10 +287,10 @@
                         <div class="endpoint">
                             <div class="endpoint-header">
                                 <span class="method get">GET</span>
-                                <span class="url">/</span>
+                                <span class="url">/api/info</span>
                             </div>
                             <p>Obtener información general de la API</p>
-                            <button class="btn" onclick="testEndpoint('GET', '/', null)">Probar Endpoint</button>
+                            <button class="btn" onclick="testEndpoint('GET', '/api/info', null)">Probar Endpoint</button>
                             <div class="loading">
                                 <div class="spinner"></div>
                                 <p>Procesando...</p>
@@ -467,8 +467,17 @@
         const API_BASE_URL = 'http://localhost:8080';
 
         function formatResponse(text) {
-            // Si parece ser HTML, formatearlo mejor
-            if (text.includes('<html') || text.includes('<!DOCTYPE')) {
+            // Si parece ser HTML completo, no mostrarlo como respuesta de API
+            if (text.includes('<!DOCTYPE html>') || text.includes('<html') && text.includes('</html>')) {
+                return "⚠️ Error: Se recibió HTML en lugar de datos de API. Esto puede indicar un error de configuración.";
+            }
+            
+            // Si es JSON string, intentar parsearlo y formatearlo
+            try {
+                const parsed = JSON.parse(text);
+                return JSON.stringify(parsed, null, 2);
+            } catch (e) {
+                // Si no es JSON, limpiar caracteres de escape
                 return text
                     .replace(/\\n/g, '\n')
                     .replace(/\\t/g, '\t')
@@ -478,20 +487,6 @@
                     .replace(/&lt;/g, '<')
                     .replace(/&gt;/g, '>')
                     .replace(/&amp;/g, '&');
-            }
-            
-            // Si es JSON string, intentar parsearlo
-            try {
-                const parsed = JSON.parse(text);
-                return JSON.stringify(parsed, null, 2);
-            } catch (e) {
-                // Si no es JSON, devolver como está
-                return text
-                    .replace(/\\n/g, '\n')
-                    .replace(/\\t/g, '\t')
-                    .replace(/\\"/g, '"')
-                    .replace(/^"/, '')
-                    .replace(/"$/, '');
             }
         }
 
@@ -585,7 +580,7 @@
 
         // Cargar información inicial de la API
         window.onload = function() {
-            testEndpoint('GET', '/', null);
+            testEndpoint('GET', '/api/info', null);
         };
     </script>
 </body>
