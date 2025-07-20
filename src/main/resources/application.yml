@@ -2,6 +2,14 @@ spring:
   application:
     name: tournament-management
   
+  # Configurar perfil para deshabilitar Spring Security
+  profiles:
+    active: test
+  
+  # Deshabilitar Spring Security temporalmente para pruebas
+  security:
+    enabled: false
+  
   # Configuración de Base de Datos
   datasource:
     url: jdbc:postgresql://localhost:5432/tournament_db

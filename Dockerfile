@@ -1,5 +1,5 @@
 # Dockerfile multi-stage para la aplicación de gestión de torneos
-FROM maven:3.9.6-openjdk-17-slim AS builder
+FROM maven:3.9.6-eclipse-temurin-17 AS builder
 
 # Etiquetas de metadatos
 LABEL maintainer="Tournament Management Team"
@@ -9,10 +9,8 @@ LABEL description="Plataforma de Gestión de Torneos de Videojuegos"
 # Crear directorio de trabajo
 WORKDIR /build
 
-# Copiar archivos de configuración Maven
+# Copiar archivo de configuración Maven
 COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
 
 # Descargar dependencias (capa de caché)
 RUN mvn dependency:go-offline -B
@@ -24,7 +22,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # ===== TARGET: DEVELOPMENT =====
-FROM openjdk:17-jdk-slim AS development
+FROM eclipse-temurin:17-jdk AS development
 
 WORKDIR /app
 
@@ -52,7 +50,7 @@ ENV SPRING_PROFILES_ACTIVE=dev
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 
 # ===== TARGET: PRODUCTION =====
-FROM openjdk:17-jre-slim AS production
+FROM eclipse-temurin:17-jre AS production
 
 WORKDIR /app
 
