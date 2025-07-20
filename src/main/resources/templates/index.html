@@ -442,15 +442,14 @@
                             </div>
                             <p>Crear nuevo ticket</p>
                             <div class="form-group">
-                                <label>Datos del Ticket (JSON):</label>
-                                <textarea id="ticket-data" placeholder='{
-  "title": "Problema con el torneo",
-  "description": "No puedo registrarme en el torneo",
-  "priority": "MEDIUM",
-  "category": "TECHNICAL"
-}'></textarea>
+                                <label>ID del Usuario:</label>
+                                <input type="number" id="ticket-user-id" placeholder="1" value="1">
                             </div>
-                            <button class="btn" onclick="testEndpoint('POST', '/tickets', 'ticket-data')">Crear Ticket</button>
+                            <div class="form-group">
+                                <label>ID del Torneo:</label>
+                                <input type="number" id="ticket-tournament-id" placeholder="1" value="1">
+                            </div>
+                            <button class="btn" onclick="createTicket()">Crear Ticket</button>
                             <div class="loading">
                                 <div class="spinner"></div>
                                 <p>Procesando...</p>
@@ -537,6 +536,70 @@
                 console.log(`Making ${method} request to: ${url}`);
 
                 const apiResponse = await fetch(url, requestOptions);
+                const responseText = await apiResponse.text();
+                
+                let responseData;
+                let isJson = false;
+                
+                try {
+                    responseData = JSON.parse(responseText);
+                    isJson = true;
+                } catch (e) {
+                    responseData = responseText;
+                }
+
+                // Mostrar resultado
+                const statusClass = apiResponse.ok ? 'success' : 'error';
+                const statusText = apiResponse.ok ? 'Éxito' : 'Error';
+                
+                let formattedResponse;
+                if (isJson) {
+                    formattedResponse = JSON.stringify(responseData, null, 2);
+                } else {
+                    // Usar la función de formateo mejorada
+                    formattedResponse = formatResponse(responseText);
+                }
+                
+                response.innerHTML = `
+                    <div class="status ${statusClass}">${apiResponse.status} ${apiResponse.statusText} - ${statusText}</div>
+                    <div class="response ${statusClass}">${formattedResponse}</div>
+                `;
+
+            } catch (error) {
+                response.innerHTML = `
+                    <div class="status error">Error de Conexión</div>
+                    <div class="response error">${error.message}</div>
+                `;
+            } finally {
+                // Habilitar botón y ocultar loading
+                button.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        async function createTicket() {
+            const userId = document.getElementById('ticket-user-id').value;
+            const tournamentId = document.getElementById('ticket-tournament-id').value;
+
+            if (!userId || !tournamentId) {
+                alert('Por favor, ingrese el ID del Usuario y el ID del Torneo.');
+                return;
+            }
+
+            const button = event.target;
+            const loading = button.nextElementSibling;
+            const response = loading.nextElementSibling;
+
+            // Deshabilitar botón y mostrar loading
+            button.disabled = true;
+            loading.style.display = 'block';
+            response.innerHTML = '';
+
+            try {
+                const url = `${API_BASE_URL}/tickets?userId=${userId}&tournamentId=${tournamentId}`;
+                console.log(`Making POST request to: ${url}`);
+
+                const apiResponse = await fetch(url, { method: 'POST' });
                 const responseText = await apiResponse.text();
                 
                 let responseData;
