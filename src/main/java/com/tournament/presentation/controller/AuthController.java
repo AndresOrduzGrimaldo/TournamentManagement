@@ -40,10 +40,6 @@ public class AuthController {
      * Información sobre el proceso de registro
      */
     @GetMapping("/register")
-    @Operation(summary = "Información de registro", description = "Muestra información sobre el proceso de registro")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Información de registro")
-    })
     public ResponseEntity<Map<String, Object>> getRegisterInfo() {
         Map<String, Object> info = new HashMap<>();
         info.put("message", "Endpoint para registro de usuarios");
