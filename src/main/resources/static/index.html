@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Management - API Testing Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        .endpoint {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .endpoint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .method {
+            padding: 5px 12px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .method.get { background: #28a745; }
+        .method.post { background: #007bff; }
+        .method.put { background: #ffc107; color: #333; }
+        .method.delete { background: #dc3545; }
+
+        .url {
+            font-family: monospace;
+            background: #f1f1f1;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            font-family: monospace;
+        }
+
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .response.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .response.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .status.success { background: #28a745; color: white; }
+        .status.error { background: #dc3545; color: white; }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            color: #666;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 Tournament Management API</h1>
+            <p>Interfaz de Pruebas para la API de Gestión de Torneos</p>
+        </div>
+
+        <div class="content">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('general')">General</button>
+                <button class="tab" onclick="showTab('tournaments')">Torneos</button>
+                <button class="tab" onclick="showTab('auth')">Autenticación</button>
+                <button class="tab" onclick="showTab('tickets')">Tickets</button>
+            </div>
+
+            <!-- Tab General -->
+            <div id="general" class="tab-content active">
+                <div class="section">
+                    <div class="section-header">Información de la API</div>
+                    <div class="section-content">
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <span class="method get">GET</span>
+                                <span class="url">/api/</span>
+                            </div>
+                            <p>Obtener información general de la API</p>
+                            <button class="btn" onclick="testEndpoint('GET', '/api/', null)">Probar Endpoint</button>
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Procesando...</p>
+                            </div>
+                            <div class="response"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Torneos -->
+            <div id="tournaments" class="tab-content">
+                <div class="section">
+                    <div class="section-header">Gestión de Torneos</div>
+                    <div class="section-content">
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <span class="method get">GET</span>
+                                <span class="url">/api/tournaments</span>
+                            </div>
+                            <p>Obtener lista de torneos</p>
+                            <button class="btn" onclick="testEndpoint('GET', '/api/tournaments', null)">Probar Endpoint</button>
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Procesando...</p>
+                            </div>
+                            <div class="response"></div>
+                        </div>
+
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <span class="method post">POST</span>
+                                <span class="url">/api/tournaments</span>
+                            </div>
+                            <p>Crear nuevo torneo</p>
+                            <div class="form-group">
+                                <label>Datos del Torneo (JSON):</label>
+                                <textarea id="tournament-data" placeholder='{
+  "name": "Torneo de Prueba",
+  "description": "Descripción del torneo",
+  "startDate": "2025-08-01T10:00:00",
+  "endDate": "2025-08-01T18:00:00",
+  "maxParticipants": 32,
+  "entryFee": 10.0,
+  "prizePool": 500.0,
+  "gameType": "FPS",
+  "category": "COMPETITIVE"
+}'></textarea>
+                            </div>
+                            <button class="btn" onclick="testEndpoint('POST', '/api/tournaments', 'tournament-data')">Crear Torneo</button>
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Procesando...</p>
+                            </div>
+                            <div class="response"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Autenticación -->
+            <div id="auth" class="tab-content">
+                <div class="section">
+                    <div class="section-header">Autenticación</div>
+                    <div class="section-content">
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <span class="method get">GET</span>
+                                <span class="url">/api/auth/register</span>
+                            </div>
+                            <p>Información sobre el registro de usuarios</p>
+                            <button class="btn" onclick="testEndpoint('GET', '/api/auth/register', null)">Probar Endpoint</button>
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Procesando...</p>
+                            </div>
+                            <div class="response"></div>
+                        </div>
+
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <span class="method post">POST</span>
+                                <span class="url">/api/auth/register</span>
+                            </div>
+                            <p>Registrar nuevo usuario</p>
+                            <div class="form-group">
+                                <label>Datos de Registro (JSON):</label>
+                                <textarea id="register-data" placeholder='{
+  "username": "usuario_prueba",
+  "email": "usuario@prueba.com",
+  "password": "password123"
+}'></textarea>
+                            </div>
+                            <button class="btn" onclick="testEndpoint('POST', '/api/auth/register', 'register-data')">Registrar Usuario</button>
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Procesando...</p>
+                            </div>
+                            <div class="response"></div>
+                        </div>
+
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <span class="method post">POST</span>
+                                <span class="url">/api/auth/login</span>
+                            </div>
+                            <p>Iniciar sesión</p>
+                            <div class="form-group">
+                                <label>Datos de Login (JSON):</label>
+                                <textarea id="login-data" placeholder='{
+  "username": "usuario_prueba",
+  "password": "password123"
+}'></textarea>
+                            </div>
+                            <button class="btn" onclick="testEndpoint('POST', '/api/auth/login', 'login-data')">Iniciar Sesión</button>
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Procesando...</p>
+                            </div>
+                            <div class="response"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Tickets -->
+            <div id="tickets" class="tab-content">
+                <div class="section">
+                    <div class="section-header">Gestión de Tickets</div>
+                    <div class="section-content">
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <span class="method get">GET</span>
+                                <span class="url">/api/tickets</span>
+                            </div>
+                            <p>Obtener lista de tickets</p>
+                            <button class="btn" onclick="testEndpoint('GET', '/api/tickets', null)">Probar Endpoint</button>
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Procesando...</p>
+                            </div>
+                            <div class="response"></div>
+                        </div>
+
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <span class="method post">POST</span>
+                                <span class="url">/api/tickets</span>
+                            </div>
+                            <p>Crear nuevo ticket</p>
+                            <div class="form-group">
+                                <label>Datos del Ticket (JSON):</label>
+                                <textarea id="ticket-data" placeholder='{
+  "title": "Problema con el torneo",
+  "description": "No puedo registrarme en el torneo",
+  "priority": "MEDIUM",
+  "category": "TECHNICAL"
+}'></textarea>
+                            </div>
+                            <button class="btn" onclick="testEndpoint('POST', '/api/tickets', 'ticket-data')">Crear Ticket</button>
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Procesando...</p>
+                            </div>
+                            <div class="response"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080';
+
+        function showTab(tabName) {
+            // Ocultar todos los tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Mostrar el tab seleccionado
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        async function testEndpoint(method, endpoint, dataId) {
+            const button = event.target;
+            const loading = button.nextElementSibling;
+            const response = loading.nextElementSibling;
+
+            // Deshabilitar botón y mostrar loading
+            button.disabled = true;
+            loading.style.display = 'block';
+            response.innerHTML = '';
+
+            try {
+                let requestOptions = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+
+                // Agregar body si es POST/PUT
+                if (dataId && (method === 'POST' || method === 'PUT')) {
+                    const dataElement = document.getElementById(dataId);
+                    if (dataElement && dataElement.value.trim()) {
+                        try {
+                            requestOptions.body = dataElement.value;
+                        } catch (e) {
+                            throw new Error('JSON inválido en los datos');
+                        }
+                    }
+                }
+
+                const url = API_BASE_URL + endpoint;
+                console.log(`Making ${method} request to: ${url}`);
+
+                const apiResponse = await fetch(url, requestOptions);
+                const responseText = await apiResponse.text();
+                
+                let responseData;
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    responseData = responseText;
+                }
+
+                // Mostrar resultado
+                const statusClass = apiResponse.ok ? 'success' : 'error';
+                const statusText = apiResponse.ok ? 'Éxito' : 'Error';
+                
+                response.innerHTML = `
+                    <div class="status ${statusClass}">${apiResponse.status} ${apiResponse.statusText} - ${statusText}</div>
+                    <div class="response ${statusClass}">${JSON.stringify(responseData, null, 2)}</div>
+                `;
+
+            } catch (error) {
+                response.innerHTML = `
+                    <div class="status error">Error de Conexión</div>
+                    <div class="response error">${error.message}</div>
+                `;
+            } finally {
+                // Habilitar botón y ocultar loading
+                button.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        // Cargar información inicial de la API
+        window.onload = function() {
+            testEndpoint('GET', '/api/', null);
+        };
+    </script>
+</body>
+</html> 
