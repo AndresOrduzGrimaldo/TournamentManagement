@@ -421,6 +421,14 @@
                 <div class="section">
                     <div class="section-header">Gestión de Tickets</div>
                     <div class="section-content">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #007bff;">
+                            <h4 style="margin: 0 0 10px 0; color: #007bff;">ℹ️ Información Importante</h4>
+                            <p style="margin: 0; font-size: 0.9em; color: #666;">
+                                <strong>Tickets de Torneo:</strong> Los tickets se crean usando IDs de usuario y torneo, no JSON. 
+                                El sistema genera automáticamente códigos QR únicos y calcula precios según el torneo.
+                            </p>
+                        </div>
+                        
                         <div class="endpoint">
                             <div class="endpoint-header">
                                 <span class="method get">GET</span>
@@ -440,7 +448,7 @@
                                 <span class="method post">POST</span>
                                 <span class="url">/tickets</span>
                             </div>
-                            <p>Crear nuevo ticket</p>
+                            <p>Crear nuevo ticket de torneo</p>
                             <div class="form-group">
                                 <label>ID del Usuario:</label>
                                 <input type="number" id="ticket-user-id" placeholder="1" value="1">
@@ -449,7 +457,25 @@
                                 <label>ID del Torneo:</label>
                                 <input type="number" id="ticket-tournament-id" placeholder="1" value="1">
                             </div>
-                            <button class="btn" onclick="createTicket()">Crear Ticket</button>
+                            <button class="btn" onclick="createTicket()">Crear Ticket de Torneo</button>
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Procesando...</p>
+                            </div>
+                            <div class="response"></div>
+                        </div>
+
+                        <div class="endpoint">
+                            <div class="endpoint-header">
+                                <span class="method post">POST</span>
+                                <span class="url">/tickets/validate</span>
+                            </div>
+                            <p>Validar ticket por código QR</p>
+                            <div class="form-group">
+                                <label>Código QR del Ticket:</label>
+                                <input type="text" id="ticket-qr-code" placeholder="TICKET-ABC123DEF456GHI7" value="TICKET-ABC123DEF456GHI7">
+                            </div>
+                            <button class="btn" onclick="validateTicket()">Validar Ticket</button>
                             <div class="loading">
                                 <div class="spinner"></div>
                                 <p>Procesando...</p>
@@ -597,6 +623,69 @@
 
             try {
                 const url = `${API_BASE_URL}/tickets?userId=${userId}&tournamentId=${tournamentId}`;
+                console.log(`Making POST request to: ${url}`);
+
+                const apiResponse = await fetch(url, { method: 'POST' });
+                const responseText = await apiResponse.text();
+                
+                let responseData;
+                let isJson = false;
+                
+                try {
+                    responseData = JSON.parse(responseText);
+                    isJson = true;
+                } catch (e) {
+                    responseData = responseText;
+                }
+
+                // Mostrar resultado
+                const statusClass = apiResponse.ok ? 'success' : 'error';
+                const statusText = apiResponse.ok ? 'Éxito' : 'Error';
+                
+                let formattedResponse;
+                if (isJson) {
+                    formattedResponse = JSON.stringify(responseData, null, 2);
+                } else {
+                    // Usar la función de formateo mejorada
+                    formattedResponse = formatResponse(responseText);
+                }
+                
+                response.innerHTML = `
+                    <div class="status ${statusClass}">${apiResponse.status} ${apiResponse.statusText} - ${statusText}</div>
+                    <div class="response ${statusClass}">${formattedResponse}</div>
+                `;
+
+            } catch (error) {
+                response.innerHTML = `
+                    <div class="status error">Error de Conexión</div>
+                    <div class="response error">${error.message}</div>
+                `;
+            } finally {
+                // Habilitar botón y ocultar loading
+                button.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        async function validateTicket() {
+            const qrCode = document.getElementById('ticket-qr-code').value;
+
+            if (!qrCode) {
+                alert('Por favor, ingrese el código QR del ticket.');
+                return;
+            }
+
+            const button = event.target;
+            const loading = button.nextElementSibling;
+            const response = loading.nextElementSibling;
+
+            // Deshabilitar botón y mostrar loading
+            button.disabled = true;
+            loading.style.display = 'block';
+            response.innerHTML = '';
+
+            try {
+                const url = `${API_BASE_URL}/tickets/validate?qrCode=${encodeURIComponent(qrCode)}`;
                 console.log(`Making POST request to: ${url}`);
 
                 const apiResponse = await fetch(url, { method: 'POST' });
