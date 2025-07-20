@@ -147,6 +147,15 @@ public class TicketService {
     }
 
     /**
+     * Obtiene todos los tickets
+     * @return Lista de todos los tickets
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<Ticket> getAllTickets() {
+        return ticketRepository.findAll();
+    }
+
+    /**
      * Valida y usa un ticket
      * @param qrCode Código QR del ticket
      * @return true si el ticket es válido y se usó exitosamente

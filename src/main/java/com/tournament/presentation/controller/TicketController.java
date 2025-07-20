@@ -31,6 +31,20 @@ public class TicketController {
     private final TicketService ticketService;
 
     /**
+     * Obtiene todos los tickets
+     */
+    @GetMapping
+    @Operation(summary = "Listar tickets", description = "Obtiene todos los tickets del sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de tickets obtenida",
+                    content = @Content(schema = @Schema(implementation = Ticket.class)))
+    })
+    public ResponseEntity<List<Ticket>> getAllTickets() {
+        List<Ticket> tickets = ticketService.getAllTickets();
+        return ResponseEntity.ok(tickets);
+    }
+
+    /**
      * Crea un ticket para un torneo
      */
     @PostMapping

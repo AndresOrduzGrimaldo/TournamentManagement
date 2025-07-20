@@ -425,7 +425,11 @@
                             <h4 style="margin: 0 0 10px 0; color: #007bff;">ℹ️ Información Importante</h4>
                             <p style="margin: 0; font-size: 0.9em; color: #666;">
                                 <strong>Tickets de Torneo:</strong> Los tickets se crean usando IDs de usuario y torneo, no JSON. 
-                                El sistema genera automáticamente códigos QR únicos y calcula precios según el torneo.
+                                El sistema genera automáticamente códigos QR únicos y códigos de barras.
+                            </p>
+                            <p style="margin: 10px 0 0 0; font-size: 0.9em; color: #dc3545;">
+                                <strong>⚠️ Error 409:</strong> Si aparece "409 - Error", significa que ya existe un ticket para ese usuario y torneo. 
+                                Prueba con diferentes IDs de usuario o torneo.
                             </p>
                         </div>
                         
@@ -445,6 +449,20 @@
 
                         <div class="endpoint">
                             <div class="endpoint-header">
+                                <span class="method get">GET</span>
+                                <span class="url">/tournaments</span>
+                            </div>
+                            <p>Listar torneos disponibles (para obtener IDs válidos)</p>
+                            <button class="btn" onclick="testEndpoint('GET', '/tournaments', null)">Listar Torneos</button>
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Procesando...</p>
+                            </div>
+                            <div class="response"></div>
+                        </div>
+
+                        <div class="endpoint">
+                            <div class="endpoint-header">
                                 <span class="method post">POST</span>
                                 <span class="url">/tickets</span>
                             </div>
@@ -455,7 +473,7 @@
                             </div>
                             <div class="form-group">
                                 <label>ID del Torneo:</label>
-                                <input type="number" id="ticket-tournament-id" placeholder="1" value="1">
+                                <input type="number" id="ticket-tournament-id" placeholder="1" value="2">
                             </div>
                             <button class="btn" onclick="createTicket()">Crear Ticket de Torneo</button>
                             <div class="loading">
