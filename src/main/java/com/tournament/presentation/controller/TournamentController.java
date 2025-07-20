@@ -50,9 +50,19 @@ public class TournamentController {
         
         log.info("Solicitud de creación de torneo: {}", request.getName());
         
-        TournamentResponse tournament = tournamentService.createTournament(request);
-        
-        return ResponseEntity.status(HttpStatus.CREATED).body(tournament);
+        try {
+            TournamentResponse tournament = tournamentService.createTournament(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(tournament);
+        } catch (IllegalArgumentException e) {
+            log.error("Error de validación al crear torneo: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (IllegalStateException e) {
+            log.error("Error de límites al crear torneo: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        } catch (Exception e) {
+            log.error("Error inesperado al crear torneo: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     /**
