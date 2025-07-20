@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -62,6 +63,12 @@ public class TicketService {
         // Validar que no esté completo
         if (tournament.isFull()) {
             throw new IllegalStateException("El torneo está completo");
+        }
+
+        // Validar que el usuario no tenga ya un ticket para este torneo
+        List<Ticket> existingTickets = ticketRepository.findByUserIdAndTournamentId(userId, tournamentId);
+        if (!existingTickets.isEmpty()) {
+            throw new IllegalStateException("El usuario ya tiene un ticket para este torneo");
         }
 
         // Generar códigos únicos
@@ -152,7 +159,7 @@ public class TicketService {
      */
     @Transactional(readOnly = true)
     public java.util.List<Ticket> getAllTickets() {
-        return ticketRepository.findAll();
+        return ticketRepository.findAllWithUserAndTournament();
     }
 
     /**

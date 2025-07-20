@@ -108,4 +108,19 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      * @return true si existe
      */
     boolean existsByUniqueCode(String uniqueCode);
+
+    /**
+     * Obtiene todos los tickets con usuario y torneo cargados
+     * @return Lista de tickets con entidades relacionadas
+     */
+    @Query("SELECT t FROM Ticket t JOIN FETCH t.user JOIN FETCH t.tournament")
+    List<Ticket> findAllWithUserAndTournament();
+
+    /**
+     * Busca tickets por usuario y torneo
+     * @param userId ID del usuario
+     * @param tournamentId ID del torneo
+     * @return Lista de tickets
+     */
+    List<Ticket> findByUserIdAndTournamentId(Long userId, Long tournamentId);
 } 
