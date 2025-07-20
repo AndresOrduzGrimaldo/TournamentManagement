@@ -258,10 +258,10 @@
                         <div class="endpoint">
                             <div class="endpoint-header">
                                 <span class="method get">GET</span>
-                                <span class="url">/api/</span>
+                                <span class="url">/</span>
                             </div>
                             <p>Obtener información general de la API</p>
-                            <button class="btn" onclick="testEndpoint('GET', '/api/', null)">Probar Endpoint</button>
+                            <button class="btn" onclick="testEndpoint('GET', '/', null)">Probar Endpoint</button>
                             <div class="loading">
                                 <div class="spinner"></div>
                                 <p>Procesando...</p>
@@ -280,10 +280,10 @@
                         <div class="endpoint">
                             <div class="endpoint-header">
                                 <span class="method get">GET</span>
-                                <span class="url">/api/tournaments</span>
+                                <span class="url">/tournaments</span>
                             </div>
                             <p>Obtener lista de torneos</p>
-                            <button class="btn" onclick="testEndpoint('GET', '/api/tournaments', null)">Probar Endpoint</button>
+                            <button class="btn" onclick="testEndpoint('GET', '/tournaments', null)">Probar Endpoint</button>
                             <div class="loading">
                                 <div class="spinner"></div>
                                 <p>Procesando...</p>
@@ -294,7 +294,7 @@
                         <div class="endpoint">
                             <div class="endpoint-header">
                                 <span class="method post">POST</span>
-                                <span class="url">/api/tournaments</span>
+                                <span class="url">/tournaments</span>
                             </div>
                             <p>Crear nuevo torneo</p>
                             <div class="form-group">
@@ -311,7 +311,7 @@
   "category": "COMPETITIVE"
 }'></textarea>
                             </div>
-                            <button class="btn" onclick="testEndpoint('POST', '/api/tournaments', 'tournament-data')">Crear Torneo</button>
+                            <button class="btn" onclick="testEndpoint('POST', '/tournaments', 'tournament-data')">Crear Torneo</button>
                             <div class="loading">
                                 <div class="spinner"></div>
                                 <p>Procesando...</p>
@@ -330,10 +330,10 @@
                         <div class="endpoint">
                             <div class="endpoint-header">
                                 <span class="method get">GET</span>
-                                <span class="url">/api/auth/register</span>
+                                <span class="url">/auth/register</span>
                             </div>
                             <p>Información sobre el registro de usuarios</p>
-                            <button class="btn" onclick="testEndpoint('GET', '/api/auth/register', null)">Probar Endpoint</button>
+                            <button class="btn" onclick="testEndpoint('GET', '/auth/register', null)">Probar Endpoint</button>
                             <div class="loading">
                                 <div class="spinner"></div>
                                 <p>Procesando...</p>
@@ -344,7 +344,7 @@
                         <div class="endpoint">
                             <div class="endpoint-header">
                                 <span class="method post">POST</span>
-                                <span class="url">/api/auth/register</span>
+                                <span class="url">/auth/register</span>
                             </div>
                             <p>Registrar nuevo usuario</p>
                             <div class="form-group">
@@ -355,7 +355,7 @@
   "password": "password123"
 }'></textarea>
                             </div>
-                            <button class="btn" onclick="testEndpoint('POST', '/api/auth/register', 'register-data')">Registrar Usuario</button>
+                            <button class="btn" onclick="testEndpoint('POST', '/auth/register', 'register-data')">Registrar Usuario</button>
                             <div class="loading">
                                 <div class="spinner"></div>
                                 <p>Procesando...</p>
@@ -366,7 +366,7 @@
                         <div class="endpoint">
                             <div class="endpoint-header">
                                 <span class="method post">POST</span>
-                                <span class="url">/api/auth/login</span>
+                                <span class="url">/auth/login</span>
                             </div>
                             <p>Iniciar sesión</p>
                             <div class="form-group">
@@ -376,7 +376,7 @@
   "password": "password123"
 }'></textarea>
                             </div>
-                            <button class="btn" onclick="testEndpoint('POST', '/api/auth/login', 'login-data')">Iniciar Sesión</button>
+                            <button class="btn" onclick="testEndpoint('POST', '/auth/login', 'login-data')">Iniciar Sesión</button>
                             <div class="loading">
                                 <div class="spinner"></div>
                                 <p>Procesando...</p>
@@ -395,10 +395,10 @@
                         <div class="endpoint">
                             <div class="endpoint-header">
                                 <span class="method get">GET</span>
-                                <span class="url">/api/tickets</span>
+                                <span class="url">/tickets</span>
                             </div>
                             <p>Obtener lista de tickets</p>
-                            <button class="btn" onclick="testEndpoint('GET', '/api/tickets', null)">Probar Endpoint</button>
+                            <button class="btn" onclick="testEndpoint('GET', '/tickets', null)">Probar Endpoint</button>
                             <div class="loading">
                                 <div class="spinner"></div>
                                 <p>Procesando...</p>
@@ -409,7 +409,7 @@
                         <div class="endpoint">
                             <div class="endpoint-header">
                                 <span class="method post">POST</span>
-                                <span class="url">/api/tickets</span>
+                                <span class="url">/tickets</span>
                             </div>
                             <p>Crear nuevo ticket</p>
                             <div class="form-group">
@@ -421,7 +421,7 @@
   "category": "TECHNICAL"
 }'></textarea>
                             </div>
-                            <button class="btn" onclick="testEndpoint('POST', '/api/tickets', 'ticket-data')">Crear Ticket</button>
+                            <button class="btn" onclick="testEndpoint('POST', '/tickets', 'ticket-data')">Crear Ticket</button>
                             <div class="loading">
                                 <div class="spinner"></div>
                                 <p>Procesando...</p>
@@ -516,7 +516,7 @@
 
         // Cargar información inicial de la API
         window.onload = function() {
-            testEndpoint('GET', '/api/', null);
+            testEndpoint('GET', '/', null);
         };
     </script>
 </body>

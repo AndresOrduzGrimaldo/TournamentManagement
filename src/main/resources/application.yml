@@ -62,11 +62,11 @@ spring:
     password: ${RABBITMQ_PASSWORD:guest}
     virtual-host: ${RABBITMQ_VHOST:/}
 
-# Configuración del Servidor
+# Configuración del servidor
 server:
-  port: ${SERVER_PORT:8080}
-  servlet:
-    context-path: /api
+  port: 8080
+  # Remover el context path para que la interfaz gráfica esté disponible en /
+  # context-path: /api
 
 # Configuración de Seguridad JWT
 jwt:
