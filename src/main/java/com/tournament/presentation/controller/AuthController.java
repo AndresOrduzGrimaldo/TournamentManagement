@@ -20,6 +20,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Controlador para autenticación y autorización
@@ -33,6 +35,32 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
+
+    /**
+     * Información sobre el proceso de registro
+     */
+    @GetMapping("/register")
+    @Operation(summary = "Información de registro", description = "Muestra información sobre el proceso de registro")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Información de registro")
+    })
+    public ResponseEntity<Map<String, Object>> getRegisterInfo() {
+        Map<String, Object> info = new HashMap<>();
+        info.put("message", "Endpoint para registro de usuarios");
+        info.put("method", "POST");
+        info.put("contentType", "application/json");
+        info.put("requiredFields", Map.of(
+            "username", "String (requerido)",
+            "email", "String (requerido, formato email)",
+            "password", "String (requerido, mínimo 6 caracteres)"
+        ));
+        info.put("example", Map.of(
+            "username", "usuario123",
+            "email", "usuario@ejemplo.com",
+            "password", "password123"
+        ));
+        return ResponseEntity.ok(info);
+    }
 
     /**
      * Registra un nuevo usuario
