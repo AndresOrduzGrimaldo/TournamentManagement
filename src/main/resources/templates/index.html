@@ -152,36 +152,65 @@
             margin-top: 15px;
             padding: 15px;
             border-radius: 5px;
-            font-family: monospace;
-            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
             white-space: pre-wrap;
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
+            line-height: 1.4;
+            border: 1px solid #ddd;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .response.success {
-            background: #d4edda;
+            background: #f8fff8;
             border: 1px solid #c3e6cb;
             color: #155724;
         }
 
         .response.error {
-            background: #f8d7da;
+            background: #fff8f8;
             border: 1px solid #f5c6cb;
             color: #721c24;
         }
 
-        .status {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 0.8em;
-            font-weight: bold;
-            margin-bottom: 10px;
+        .response::-webkit-scrollbar {
+            width: 8px;
         }
 
-        .status.success { background: #28a745; color: white; }
-        .status.error { background: #dc3545; color: white; }
+        .response::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .response::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .response::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .status.success { 
+            background: #28a745; 
+            color: white; 
+        }
+        
+        .status.error { 
+            background: #dc3545; 
+            color: white; 
+        }
 
         .loading {
             display: none;
@@ -437,6 +466,35 @@
     <script>
         const API_BASE_URL = 'http://localhost:8080';
 
+        function formatResponse(text) {
+            // Si parece ser HTML, formatearlo mejor
+            if (text.includes('<html') || text.includes('<!DOCTYPE')) {
+                return text
+                    .replace(/\\n/g, '\n')
+                    .replace(/\\t/g, '\t')
+                    .replace(/\\"/g, '"')
+                    .replace(/^"/, '')
+                    .replace(/"$/, '')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&amp;/g, '&');
+            }
+            
+            // Si es JSON string, intentar parsearlo
+            try {
+                const parsed = JSON.parse(text);
+                return JSON.stringify(parsed, null, 2);
+            } catch (e) {
+                // Si no es JSON, devolver como está
+                return text
+                    .replace(/\\n/g, '\n')
+                    .replace(/\\t/g, '\t')
+                    .replace(/\\"/g, '"')
+                    .replace(/^"/, '')
+                    .replace(/"$/, '');
+            }
+        }
+
         function showTab(tabName) {
             // Ocultar todos los tabs
             const tabs = document.querySelectorAll('.tab-content');
@@ -487,8 +545,11 @@
                 const responseText = await apiResponse.text();
                 
                 let responseData;
+                let isJson = false;
+                
                 try {
                     responseData = JSON.parse(responseText);
+                    isJson = true;
                 } catch (e) {
                     responseData = responseText;
                 }
@@ -497,9 +558,17 @@
                 const statusClass = apiResponse.ok ? 'success' : 'error';
                 const statusText = apiResponse.ok ? 'Éxito' : 'Error';
                 
+                let formattedResponse;
+                if (isJson) {
+                    formattedResponse = JSON.stringify(responseData, null, 2);
+                } else {
+                    // Usar la función de formateo mejorada
+                    formattedResponse = formatResponse(responseText);
+                }
+                
                 response.innerHTML = `
                     <div class="status ${statusClass}">${apiResponse.status} ${apiResponse.statusText} - ${statusText}</div>
-                    <div class="response ${statusClass}">${JSON.stringify(responseData, null, 2)}</div>
+                    <div class="response ${statusClass}">${formattedResponse}</div>
                 `;
 
             } catch (error) {
