@@ -113,7 +113,12 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      * Obtiene todos los tickets con usuario y torneo cargados
      * @return Lista de tickets con entidades relacionadas
      */
-    @Query("SELECT t FROM Ticket t JOIN FETCH t.user JOIN FETCH t.tournament")
+    @Query("SELECT t FROM Ticket t " +
+           "JOIN FETCH t.user " +
+           "JOIN FETCH t.tournament tr " +
+           "JOIN FETCH tr.category " +
+           "JOIN FETCH tr.gameType gt " +
+           "JOIN FETCH gt.category")
     List<Ticket> findAllWithUserAndTournament();
 
     /**
