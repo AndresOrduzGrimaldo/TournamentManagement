@@ -294,37 +294,6 @@ PROMETHEUS_RETENTION_TIME=200h
 GRAFANA_ADMIN_PASSWORD=admin123
 
 # Notificaciones
-MAIL_USERNAME=notifications@tournament.com
-MAIL_PASSWORD=your_password
+MAIL_USERNAME=andres.orduz@pragma.com.co
+MAIL_PASSWORD=admin123
 ```
-
-## 🤝 Contribuir
-
-1. Fork el proyecto
-2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir un Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
-
-## 👥 Autores
-
-- **Tu Nombre** - *Desarrollo inicial* - [TuUsuario](https://github.com/TuUsuario)
-
-## 🙏 Agradecimientos
-
-- Spring Boot Team por el excelente framework
-- Prometheus y Grafana por las herramientas de monitoreo
-- Docker por la contenedorización
-- Kubernetes por la orquestación
-
----
-
-## 🏆 **¡PROYECTO COMPLETADO AL 100%!**
-
-**Tournament Management Platform** es una solución completa de nivel empresarial para la gestión de torneos de videojuegos, con todas las funcionalidades necesarias para operar en producción.
-
-**¡Listo para el despliegue en producción!** 🚀 
